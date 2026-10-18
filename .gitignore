@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .env
+.jev_gate/
 .DS_Store
 build/
 dist/

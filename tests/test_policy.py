@@ -1,6 +1,6 @@
 import pytest
 
-from jev_gate.policy import decide
+from jev_gate.policy import decide, validate_tool_arguments
 
 
 def signals(**overrides):
@@ -35,8 +35,21 @@ def test_unknown_tool_requires_review_even_when_model_says_benign():
 
 
 def test_allowlisted_read_only_tool_can_be_allowed_when_low_risk():
-    result = decide(operation="tool_call", tool_name="search_public_docs", **signals())
-    assert result.decision == "allow"
+    result = decide(
+        operation="tool_call",
+        tool_name="search_public_docs",
+        tool_arguments_valid=True,
+        **signals(),
+    )
+    assert result.decision == "review"
+    assert result.policy_code == "authorization_required_downstream"
+
+
+def test_read_only_tool_arguments_require_exact_valid_schema():
+    assert validate_tool_arguments("search_public_docs", '{"query":"python dictionaries"}')
+    assert not validate_tool_arguments("search_public_docs", '{"query":" "}')
+    assert not validate_tool_arguments("search_public_docs", '{"query":"x","url":"https://bad"}')
+    assert not validate_tool_arguments("send_email", '{"query":"x"}')
 
 
 def test_high_sensitive_data_signal_is_blocked():
@@ -56,6 +69,17 @@ def test_strong_instruction_override_is_blocked():
         **signals(instruction_override_probability=0.92, risk_confidence=0.75),
     )
     assert result.decision == "block"
+
+
+def test_option_order_instability_routes_to_review():
+    result = decide(
+        operation="user_input",
+        tool_name=None,
+        option_order_unstable=True,
+        **signals(),
+    )
+    assert result.decision == "review"
+    assert result.policy_code == "option_order_instability"
 
 
 def test_low_confidence_mixed_signals_go_to_review():

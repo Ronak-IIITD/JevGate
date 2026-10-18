@@ -84,9 +84,17 @@ function showResult(data) {
   $("#signals-grid").hidden = !data.signals;
   $("#latency-label").textContent = `${Number(data.latency_ms || 0).toFixed(1)} ms · ${data.model_available ? "inspection complete" : "routed to review"}`;
   $("#request-id").textContent = `Request ID: ${data.request_id || "—"}`;
+  $("#gateway-note").textContent = data.gateway_passed
+    ? "Gateway checks passed. The calling application must still authorize the user and the target tool."
+    : "A gateway decision does not grant access to a user or authorize a target tool.";
 
   if (!data.signals) return;
   const s = data.signals;
+  const robustness = $("#robustness-result");
+  robustness.hidden = false;
+  robustness.textContent = s.option_order_unstable
+    ? `Option-order instability detected across ${data.robustness_runs} runs (${(s.threat_type_variants || []).join(" → ")}); routed to review.`
+    : `Threat category stayed stable across ${data.robustness_runs} option orderings.`;
   $("#threat-type").textContent = titleCase(s.threat_type);
   $("#threat-confidence").textContent = percent(s.threat_confidence);
   setMeter("#threat-meter", s.threat_confidence);
@@ -107,6 +115,9 @@ form.addEventListener("submit", async (event) => {
     context: $("#context").value || null,
     tool_name: operation.value === "tool_call" ? $("#tool-name").value : null,
     tool_arguments: operation.value === "tool_call" ? $("#tool-arguments").value || null : null,
+    evidence: $("#evidence-content").value.trim()
+      ? [{ source: $("#evidence-source").value, content: $("#evidence-content").value.trim() }]
+      : [],
   };
   submitButton.disabled = true;
   submitButton.querySelector("span:nth-child(2)").textContent = "Inspecting…";
@@ -131,6 +142,7 @@ form.addEventListener("submit", async (event) => {
       latency_ms: 0,
       request_id: "not-issued",
       signals: null,
+      gateway_passed: false,
     });
   } finally {
     submitButton.disabled = false;
@@ -138,10 +150,44 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
+const robustnessForm = $("#robustness-form");
+const robustnessButton = $("#robustness-button");
+robustnessForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const options = $("#lab-options").value.split("\n").map((option) => option.trim()).filter(Boolean);
+  const output = $("#robustness-lab-result");
+  output.hidden = false;
+  if (options.length < 2 || new Set(options).size !== options.length) {
+    output.textContent = "Enter at least two unique options, one per line.";
+    return;
+  }
+  robustnessButton.disabled = true;
+  robustnessButton.querySelector("span:first-child").textContent = "Running permutations…";
+  try {
+    const response = await fetch("/api/v1/robustness", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state: $("#lab-state").value, options }),
+    });
+    const data = await response.json();
+    const cost = data.provider_cost_usd == null ? "cost unavailable" : `$${Number(data.provider_cost_usd).toFixed(6)}`;
+    output.textContent = data.available
+      ? `${data.unstable ? "UNSTABLE · route to review" : "STABLE IN TESTED ORDERINGS"} · flip rate ${percent(data.flip_rate)} · ${cost}\n${data.runs.map((run) => `${run.option_order.join(" · ")} → ${run.selected_option} (${percent(run.selection_confidence)} reported confidence)`).join("\n")}`
+      : data.explanation || "Assessment unavailable; route to review.";
+  } catch {
+    output.textContent = "Assessment unavailable; route to review.";
+  } finally {
+    robustnessButton.disabled = false;
+    robustnessButton.querySelector("span:first-child").textContent = "Run order check";
+  }
+});
+
 syncOperationFields();
 fetch("/health").then((response) => response.json()).then((health) => {
   const label = $("#connection-label");
-  label.textContent = health.jev_configured ? `Jev connected · ${health.model}` : "API online · Jev key not set";
+  label.textContent = health.jev_configured
+    ? `${titleCase(health.provider)} connected · ${health.model}`
+    : "API online · provider key not set";
   const dot = document.querySelector(".topbar-right .environment-dot");
   if (!health.jev_configured) {
     dot.style.background = "#f7bd63";

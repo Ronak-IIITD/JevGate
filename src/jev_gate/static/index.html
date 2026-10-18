@@ -74,7 +74,16 @@
 
             <label for="context">Additional context <span class="optional">OPTIONAL</span></label>
             <textarea id="context" name="context" class="context-input" placeholder="What is the agent supposed to do? Keep credentials and secrets out." maxlength="4000" rows="2"></textarea>
-            <div class="privacy-hint"><span>◇</span> Request text is sent to TypeSafe for analysis when configured. JevGate does not store submitted text.</div>
+            <label for="evidence-source">Untrusted evidence <span class="optional">OPTIONAL</span></label>
+            <div class="evidence-fields">
+              <select id="evidence-source" aria-label="Evidence source">
+                <option value="email">Email</option><option value="webpage">Webpage</option>
+                <option value="document">Document</option><option value="retrieval">Retrieved passage</option>
+                <option value="other">Other</option>
+              </select>
+              <textarea id="evidence-content" placeholder="Paste webpage, email, or document content as untrusted evidence…" maxlength="20000" rows="2"></textarea>
+            </div>
+            <div class="privacy-hint"><span>◇</span> Inputs and evidence are sent to the configured provider. Local audit stores hashes and decision metadata, not raw content.</div>
             <button type="submit" class="inspect-button" id="inspect-button"><span class="button-icon">⌕</span><span>Inspect request</span><span class="button-arrow">→</span></button>
           </form>
         </article>
@@ -83,12 +92,14 @@
           <div class="panel-heading"><div><div class="panel-kicker">OUTPUT</div><h2>Decision report</h2></div><span class="step-chip muted-step">STEP 02</span></div>
           <div id="empty-state" class="empty-state">
             <div class="empty-illustration"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="shield"><svg viewBox="0 0 54 60" aria-hidden="true"><path d="M27 3 48 10v15c0 13.3-9 22-21 31C15 47 6 38.3 6 25V10L27 3Z"/><path d="m17 28 7 7 14-15"/></svg></div><span class="float-dot dot-a"></span><span class="float-dot dot-b"></span></div>
-            <h3>Awaiting inspection</h3><p>Run an example or submit your own request. Jev's signals and the local policy decision will appear here.</p>
+            <h3>Awaiting inspection</h3><p>Run an example or submit your own request. Model signals, option-order stability, and local policy will appear here.</p>
             <div class="empty-checklist"><span><b>01</b> Classify request</span><span><b>02</b> Apply policy</span><span><b>03</b> Show outcome</span></div>
           </div>
           <div id="result-state" hidden>
             <div class="decision-banner" id="decision-banner"><div class="decision-symbol" id="decision-symbol">?</div><div class="decision-copy"><div class="decision-overline" id="decision-overline">POLICY DECISION</div><h3 id="decision-title">REVIEW</h3><p id="decision-explanation">Manual review recommended.</p></div><span class="decision-badge" id="decision-badge">REVIEW</span></div>
             <div class="policy-meta"><div><span>POLICY CODE</span><code id="policy-code">—</code></div><div><span>MODEL</span><b id="model-name">—</b></div></div>
+            <div id="gateway-note" class="privacy-hint">A gateway decision does not grant access to a user or authorize a target tool.</div>
+            <div id="robustness-result" class="privacy-hint" hidden></div>
             <div class="signals-heading"><h3>Model signals</h3><span id="model-status" class="status-pill">—</span></div>
             <div id="signals-unavailable" class="signals-unavailable" hidden>Jev signals are unavailable. The gateway routed this request to review rather than allowing it.</div>
             <div id="signals-grid" class="signals-grid">
@@ -100,6 +111,22 @@
             <div class="result-footer"><div><span class="footer-dot"></span><span id="latency-label">—</span></div><span id="request-id">Request ID: —</span></div>
           </div>
         </article>
+      </section>
+
+      <section class="panel robustness-lab" aria-labelledby="robustness-title">
+        <div class="panel-heading"><div><div class="panel-kicker">EVALUATION</div><h2 id="robustness-title">Jev Robustness Lab</h2></div><span class="step-chip">OPTION ORDER</span></div>
+        <p class="panel-description">Submit the same task with reordered action choices. A changed selection is a review signal, never an authorization decision.</p>
+        <form id="robustness-form">
+          <div class="lab-inputs">
+            <div><label for="lab-state">Task state</label><textarea id="lab-state" maxlength="20000" rows="4" required placeholder="A browser agent must choose the next action on a shopping page."></textarea></div>
+            <div><label for="lab-options">Action options <span class="optional">ONE PER LINE</span></label><textarea id="lab-options" rows="4" required>Checkout
+Advertisement
+Cancel</textarea></div>
+          </div>
+          <button type="submit" class="inspect-button" id="robustness-button"><span>Run order check</span><span class="button-arrow">→</span></button>
+        </form>
+        <div id="robustness-lab-result" class="lab-result" hidden></div>
+        <div class="privacy-hint">Selection confidence is model-reported and is not a calibrated probability. Audit stores hashes and decision metadata, not these raw inputs.</div>
       </section>
 
       <footer class="page-footer"><span>JEVGATE <b>·</b> A developer prototype for confidence-aware routing</span><span>Predictions are signals, not guarantees. <a href="/docs">Explore the API ↗</a></span></footer>
