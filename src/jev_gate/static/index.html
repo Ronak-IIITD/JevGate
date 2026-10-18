@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1020" />
+  <title>JevGate — AI Agent Security Gateway</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="JevGate home">
+        <span class="brand-mark"><svg viewBox="0 0 32 32" role="img" aria-label=""><path d="M16 3 27 7v8c0 7.1-4.7 11.5-11 14-6.3-2.5-11-6.9-11-14V7l11-4Z"/><path d="m10.2 15.7 3.7 3.6 7.9-8.1"/></svg></span>
+        <span><strong>jev<span>gate</span></strong><small>AGENT SECURITY</small></span>
+      </a>
+      <div class="side-section-label">WORKSPACE</div>
+      <a class="nav-item active" href="#inspector"><span class="nav-icon">⌘</span> Inspector <span class="nav-count">01</span></a>
+      <a class="nav-item" href="/docs"><span class="nav-icon">↗</span> API reference</a>
+      <div class="sidebar-bottom">
+        <div class="status-card"><span class="pulse"></span><div><b>Policy engine</b><small>Local deterministic rules</small></div></div>
+        <div class="sidebar-note">Jev supplies predictions.<br/>Your code enforces policy.</div>
+        <div class="version">JEVGATE <span>v0.2.0</span></div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="inspector">
+      <header class="topbar">
+        <div class="breadcrumbs">Workspace <span>/</span> <b>Request inspector</b></div>
+        <div class="topbar-right"><span class="environment-dot"></span><span id="connection-label">Checking API…</span><a class="docs-link" href="/docs">Docs <span>↗</span></a></div>
+      </header>
+
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> CONFIDENCE-AWARE ROUTING</div>
+        <h1>Stop risky actions<br/><span>before they execute.</span></h1>
+        <p>Inspect untrusted prompts and proposed tool calls with Jev. Route them through explicit policy rules before your agent acts.</p>
+        <div class="hero-tags"><span><i>01</i> Analyze</span><span class="tag-arrow">→</span><span><i>02</i> Evaluate policy</span><span class="tag-arrow">→</span><span><i>03</i> Route safely</span></div>
+      </section>
+
+      <section class="summary-grid" aria-label="Gateway principles">
+        <article class="summary-card"><div class="summary-icon purple">◈</div><div><span>Decision model</span><strong>Jev / System One</strong><small>Structured risk signals</small></div></article>
+        <article class="summary-card"><div class="summary-icon blue">⌘</div><div><span>Policy layer</span><strong>Deterministic rules</strong><small>Auditable local decisions</small></div></article>
+        <article class="summary-card"><div class="summary-icon amber">⛨</div><div><span>Safe fallback</span><strong>Review by default</strong><small>When analysis is unavailable</small></div></article>
+      </section>
+
+      <section class="workspace-grid">
+        <article class="panel inspector-panel">
+          <div class="panel-heading"><div><div class="panel-kicker">INPUT</div><h2>Inspect a request</h2></div><span class="step-chip">STEP 01</span></div>
+          <p class="panel-description">Paste the content an agent received, or describe the action it wants to take.</p>
+
+          <div class="samples-label">TRY A SCENARIO</div>
+          <div class="sample-row">
+            <button class="sample-chip" data-sample="injection"><span class="sample-dot red"></span> Prompt injection</button>
+            <button class="sample-chip" data-sample="benign"><span class="sample-dot green"></span> Normal input</button>
+            <button class="sample-chip" data-sample="tool"><span class="sample-dot amber"></span> Email action</button>
+          </div>
+
+          <form id="inspect-form">
+            <label for="operation">Request type</label>
+            <div class="select-wrap"><select id="operation" name="operation"><option value="user_input">User input / untrusted content</option><option value="tool_call">Proposed tool call</option></select><span>⌄</span></div>
+
+            <div class="tool-fields" id="tool-fields" hidden>
+              <label for="tool-name">Tool name <span class="required">REQUIRED</span></label>
+              <input id="tool-name" name="tool_name" placeholder="e.g. send_email" maxlength="120" />
+              <label for="tool-arguments">Arguments / action details <span class="optional">OPTIONAL</span></label>
+              <textarea id="tool-arguments" name="tool_arguments" class="arguments-input" placeholder="Recipient, file path, command, or other proposed arguments…" maxlength="4000" rows="2"></textarea>
+            </div>
+
+            <div class="label-row"><label for="request-text">Content to inspect</label><span id="char-count">0 / 20,000</span></div>
+            <textarea id="request-text" name="text" class="main-textarea" placeholder="Paste a prompt, document excerpt, or tool request…" maxlength="20000" required></textarea>
+
+            <label for="context">Additional context <span class="optional">OPTIONAL</span></label>
+            <textarea id="context" name="context" class="context-input" placeholder="What is the agent supposed to do? Keep credentials and secrets out." maxlength="4000" rows="2"></textarea>
+            <div class="privacy-hint"><span>◇</span> Request text is sent to TypeSafe for analysis when configured. JevGate does not store submitted text.</div>
+            <button type="submit" class="inspect-button" id="inspect-button"><span class="button-icon">⌕</span><span>Inspect request</span><span class="button-arrow">→</span></button>
+          </form>
+        </article>
+
+        <article class="panel result-panel" aria-live="polite">
+          <div class="panel-heading"><div><div class="panel-kicker">OUTPUT</div><h2>Decision report</h2></div><span class="step-chip muted-step">STEP 02</span></div>
+          <div id="empty-state" class="empty-state">
+            <div class="empty-illustration"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="shield"><svg viewBox="0 0 54 60" aria-hidden="true"><path d="M27 3 48 10v15c0 13.3-9 22-21 31C15 47 6 38.3 6 25V10L27 3Z"/><path d="m17 28 7 7 14-15"/></svg></div><span class="float-dot dot-a"></span><span class="float-dot dot-b"></span></div>
+            <h3>Awaiting inspection</h3><p>Run an example or submit your own request. Jev's signals and the local policy decision will appear here.</p>
+            <div class="empty-checklist"><span><b>01</b> Classify request</span><span><b>02</b> Apply policy</span><span><b>03</b> Show outcome</span></div>
+          </div>
+          <div id="result-state" hidden>
+            <div class="decision-banner" id="decision-banner"><div class="decision-symbol" id="decision-symbol">?</div><div class="decision-copy"><div class="decision-overline" id="decision-overline">POLICY DECISION</div><h3 id="decision-title">REVIEW</h3><p id="decision-explanation">Manual review recommended.</p></div><span class="decision-badge" id="decision-badge">REVIEW</span></div>
+            <div class="policy-meta"><div><span>POLICY CODE</span><code id="policy-code">—</code></div><div><span>MODEL</span><b id="model-name">—</b></div></div>
+            <div class="signals-heading"><h3>Model signals</h3><span id="model-status" class="status-pill">—</span></div>
+            <div id="signals-unavailable" class="signals-unavailable" hidden>Jev signals are unavailable. The gateway routed this request to review rather than allowing it.</div>
+            <div id="signals-grid" class="signals-grid">
+              <div class="signal-row"><div class="signal-label"><span>Threat category</span><b id="threat-type">—</b></div><div class="meter"><span id="threat-meter"></span></div><small>Classification confidence <b id="threat-confidence">—</b></small></div>
+              <div class="signal-row"><div class="signal-label"><span>Risk score</span><b id="risk-score">—</b></div><div class="meter"><span id="risk-meter"></span></div><small>Score confidence <b id="risk-confidence">—</b></small></div>
+              <div class="signal-row"><div class="signal-label"><span>Instruction override</span><b id="override-probability">—</b></div><div class="meter"><span id="override-meter"></span></div><small>Estimated probability</small></div>
+              <div class="signal-row"><div class="signal-label"><span>Sensitive-data extraction</span><b id="sensitive-probability">—</b></div><div class="meter"><span id="sensitive-meter"></span></div><small>Estimated probability</small></div>
+            </div>
+            <div class="result-footer"><div><span class="footer-dot"></span><span id="latency-label">—</span></div><span id="request-id">Request ID: —</span></div>
+          </div>
+        </article>
+      </section>
+
+      <footer class="page-footer"><span>JEVGATE <b>·</b> A developer prototype for confidence-aware routing</span><span>Predictions are signals, not guarantees. <a href="/docs">Explore the API ↗</a></span></footer>
+    </main>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
