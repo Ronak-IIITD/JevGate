@@ -2,6 +2,8 @@
 
 **A layered AI decision-security gateway for untrusted agent inputs and proposed tool calls.** It separates server-side policy from user prompts and source-tagged evidence, requests risk signals through Jev Router, checks option-order stability, applies deterministic policy, and records redacted audit metadata. JevGate does not execute tools.
 
+[Architecture](docs/architecture.md) · [Threat model](docs/threat-model.md) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [Changelog](CHANGELOG.md)
+
 > **Prototype boundary:** This is an educational starter, not a production security boundary. Predictions can be wrong. User authentication, authorization, approval workflows, and execution controls remain the responsibility of the calling application and target tool.
 
 ## Features
@@ -41,6 +43,30 @@ uvicorn jev_gate.main:app --reload --app-dir src
 Open `http://127.0.0.1:8000/` for the dashboard or `/docs` for the API reference. The app uses OpenRouter's chat-completions API with `typesafe/jev-router`. `OPENROUTER_COST_TIER` can be `low`, `medium`, or `high`. The key remains server-side and is never sent to browser code. A direct TypeSafe API key remains supported as a fallback.
 
 `uv.lock` pins the resolved dependency graph. Install the optional direct TypeSafe fallback with `uv sync --frozen --extra direct-typesafe`.
+
+## Container
+
+The image runs as an unprivileged user and stores its SQLite audit database under `/data`. Build and run it with a persistent Docker volume and a local environment file:
+
+```bash
+docker build -t jev-gate .
+docker run --rm -p 8000:8000 --env-file .env -v jev-gate-data:/data jev-gate
+```
+
+Keep `.env` private and do not publish the unauthenticated API/dashboard directly to the internet. Put an authenticated, access-controlled service in front of it for shared deployments.
+
+## Repository layout
+
+```text
+src/jev_gate/       API, MCP server, policy, analysis, and dashboard assets
+tests/              Automated tests with mocked provider calls
+data/               Synthetic adversarial benchmark cases
+scripts/            Benchmark runner and developer utilities
+docs/               Architecture and threat model
+.github/workflows/  Continuous integration
+```
+
+Pull requests run linting, tests, and package builds on Python 3.11–3.13. See [CONTRIBUTING.md](CONTRIBUTING.md) before sending changes.
 
 ## Connect an agent with MCP
 

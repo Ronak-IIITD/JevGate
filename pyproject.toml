@@ -8,6 +8,20 @@ version = "0.2.0"
 description = "An MCP and API security gateway for AI agent inputs and proposed tool calls, powered by Jev."
 readme = "README.md"
 requires-python = ">=3.11"
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Web Environment",
+  "Framework :: FastAPI",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Security",
+]
+license = "MIT"
 dependencies = [
   "fastapi>=0.115.0,<1.0.0",
   "uvicorn[standard]>=0.30.0,<1.0.0",
@@ -15,6 +29,12 @@ dependencies = [
   "python-dotenv>=1.0.1,<2.0.0",
   "mcp>=1.28.0,<2.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Ronak-IIITD/JevGate"
+Repository = "https://github.com/Ronak-IIITD/JevGate"
+Issues = "https://github.com/Ronak-IIITD/JevGate/issues"
+Changelog = "https://github.com/Ronak-IIITD/JevGate/blob/main/CHANGELOG.md"
 
 [project.scripts]
 jev-gate-mcp = "jev_gate.mcp_server:main"
