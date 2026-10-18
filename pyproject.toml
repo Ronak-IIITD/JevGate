@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "jev-gate"
 version = "0.2.0"
-description = "A confidence-aware security gateway for AI agent inputs and proposed tool calls, powered by Jev."
+description = "An MCP and API security gateway for AI agent inputs and proposed tool calls, powered by Jev."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -13,7 +13,11 @@ dependencies = [
   "uvicorn[standard]>=0.30.0,<1.0.0",
   "pydantic>=2.12.0,<3.0.0",
   "python-dotenv>=1.0.1,<2.0.0",
+  "mcp>=1.28.0,<2.0.0",
 ]
+
+[project.scripts]
+jev-gate-mcp = "jev_gate.mcp_server:main"
 
 [project.optional-dependencies]
 direct-typesafe = ["typesafe-sdk>=0.7.5,<0.8.0"]

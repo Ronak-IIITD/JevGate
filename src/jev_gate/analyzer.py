@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from .detections import detect_attack_patterns, redact_credential_values
 from .policy import DecisionResult, decide, validate_tool_arguments
 
 MODEL = os.getenv("JEV_MODEL", "jev-latest")
@@ -57,6 +58,7 @@ class AnalysisResult:
     threat_type_variants: list[str] | None = None
     robustness_signals: list[dict[str, object]] | None = None
     provider_cost_usd: float | None = None
+    deterministic_findings: list[dict[str, str]] | None = None
 
 
 def analyze_and_decide(
@@ -70,13 +72,23 @@ def analyze_and_decide(
 ) -> AnalysisResult:
     """Assess untrusted data under server policy and compare reordered threat categories."""
     state = {
-        "user_request": text,
-        "untrusted_evidence": list(evidence),
+        "user_request": redact_credential_values(text),
+        "untrusted_evidence": [
+            {**item, "content": redact_credential_values(str(item.get("content") or ""))}
+            for item in evidence
+        ],
         "operation": operation,
         "proposed_tool_name": tool_name,
-        "proposed_tool_arguments": tool_arguments or "",
-        "additional_context": context or "",
+        "proposed_tool_arguments": redact_credential_values(tool_arguments or ""),
+        "additional_context": redact_credential_values(context or ""),
     }
+    deterministic_findings = detect_attack_patterns(
+        text=text,
+        context=context,
+        evidence=evidence,
+        tool_name=tool_name,
+        tool_arguments=tool_arguments,
+    )
 
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
     variants: list[dict[str, object]] = []
@@ -138,6 +150,7 @@ def analyze_and_decide(
         sensitive_data_probability=sensitive_probability,
         option_order_unstable=option_order_unstable,
         tool_arguments_valid=validate_tool_arguments(tool_name, tool_arguments),
+        deterministic_findings=deterministic_findings,
     )
 
     return AnalysisResult(
@@ -155,6 +168,7 @@ def analyze_and_decide(
         provider_cost_usd=(
             sum(costs) if costs and all(cost is not None for cost in costs) else None
         ),
+        deterministic_findings=deterministic_findings,
     )
 
 

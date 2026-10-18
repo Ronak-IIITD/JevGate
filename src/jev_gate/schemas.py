@@ -64,6 +64,7 @@ class Signals(BaseModel):
     sensitive_data_probability: float = Field(ge=0.0, le=1.0)
     option_order_unstable: bool = False
     threat_type_variants: list[str] = Field(default_factory=list)
+    deterministic_findings: list[dict[str, str]] = Field(default_factory=list)
 
 
 class InspectResponse(BaseModel):

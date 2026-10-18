@@ -127,6 +127,7 @@ def inspect(request: InspectRequest) -> InspectResponse:
             sensitive_data_probability=result.sensitive_data_probability,
             option_order_unstable=result.option_order_unstable,
             threat_type_variants=result.threat_type_variants or [],
+            deterministic_findings=result.deterministic_findings or [],
         ),
         model=result.model,
         model_available=True,

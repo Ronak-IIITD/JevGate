@@ -54,6 +54,7 @@ def decide(
     sensitive_data_probability: float,
     option_order_unstable: bool = False,
     tool_arguments_valid: bool = False,
+    deterministic_findings: list[dict[str, str]] | None = None,
 ) -> DecisionResult:
     """Apply conservative, auditable routing rules to Jev's predictions.
 
@@ -61,6 +62,24 @@ def decide(
     them against a representative labeled dataset before considering deployment.
     """
     normalized_tool = (tool_name or "").strip().lower()
+
+    findings = deterministic_findings or []
+    high_findings = [finding for finding in findings if finding.get("severity") == "high"]
+    if high_findings:
+        categories = ", ".join(sorted({finding["category"] for finding in high_findings}))
+        sources = ", ".join(sorted({finding["source"] for finding in high_findings}))
+        return DecisionResult(
+            "block",
+            "deterministic_attack_pattern",
+            f"Local security rules matched a high-risk {categories} pattern in {sources}.",
+        )
+    if findings:
+        categories = ", ".join(sorted({finding["category"] for finding in findings}))
+        return DecisionResult(
+            "review",
+            "deterministic_suspicious_pattern",
+            f"Local security rules found suspicious {categories} content; review before proceeding.",
+        )
 
     # Strong threat evidence takes precedence over tool type.
     if sensitive_data_probability >= 0.90 and risk_confidence >= 0.40:

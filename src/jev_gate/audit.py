@@ -64,6 +64,7 @@ def record_inspection(
         "sensitive_data_probability": result.sensitive_data_probability,
         "option_order_unstable": result.option_order_unstable,
         "threat_type_variants": result.threat_type_variants,
+        "deterministic_findings": result.deterministic_findings,
         "robustness_signals": result.robustness_signals,
         "provider_cost_usd": result.provider_cost_usd,
         "dependency_lock_hash": _lockfile_hash(),
